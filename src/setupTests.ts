@@ -15,7 +15,12 @@ global.WritableStream = WritableStream as any;
 global.BroadcastChannel = BroadcastChannel as any;
 
 import { server } from './mocks/server';
+import { store } from './store';
+import { apiSlice } from './store/apiSlice';
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  store.dispatch(apiSlice.util.resetApiState());
+});
 afterAll(() => server.close());

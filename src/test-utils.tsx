@@ -3,11 +3,16 @@ import { render, RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { store } from './store';
+import { ToastProvider } from './components/common/Toast';
 
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <Provider store={store}>
-      <BrowserRouter>{children}</BrowserRouter>
+      <BrowserRouter>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </BrowserRouter>
     </Provider>
   );
 };

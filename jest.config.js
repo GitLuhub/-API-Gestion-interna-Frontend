@@ -6,6 +6,7 @@ export default {
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^(\\.\\./)+config$': '<rootDir>/src/__mocks__/config.ts'
   },
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
@@ -14,6 +15,6 @@ export default {
     '^.+\\.(js|jsx|mjs|cjs)$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(@mswjs|msw|until-async|@testing-library|cross-fetch)/)"
+    "node_modules/(?!(@mswjs|msw|until-async|cross-fetch)/)"
   ]
 };

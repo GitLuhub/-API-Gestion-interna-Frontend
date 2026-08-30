@@ -4,4 +4,15 @@ export default {
     '@babel/preset-typescript',
     ['@babel/preset-react', { runtime: 'automatic' }],
   ],
+  plugins: [
+    function () {
+      return {
+        visitor: {
+          MetaProperty(path) {
+            path.replaceWithSourceString('process');
+          }
+        }
+      };
+    }
+  ]
 };

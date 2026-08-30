@@ -1,27 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useLoginMutation } from './authApi';
+import { useLoginMutation, authApi } from './authApi';
 import { setCredentials } from './authSlice';
+import { useToast } from '../../components/common/Toast';
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [login, { isLoading, error }] = useLoginMutation();
+  const [getMe] = authApi.useLazyGetMeQuery();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    document.title = 'Login - API Gestión Interna';
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const { access_token } = await login({ email, password }).unwrap();
-      // En un flujo real, deberíamos obtener los detalles del usuario aquí o desde el token JWT decodificado
-      // Por simplicidad del MVP de login, asumiremos un objeto de usuario
-      const user = { email }; // Reemplazar con datos reales
-      dispatch(setCredentials({ user, accessToken: access_token }));
+      const meResponse = await getMe().unwrap();
+      dispatch(setCredentials({ user: meResponse.data, accessToken: access_token }));
+      showToast('Bienvenido, ' + meResponse.data.first_name, 'success');
       navigate('/dashboard');
-    } catch (err) {
-      console.error('Login Error:', err);
+    } catch (err: any) {
+      showToast(err?.data?.detail || 'Error al iniciar sesión', 'error');
     }
   };
 

@@ -1,9 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from './index';
 import { setCredentials, logout } from '../features/auth/authSlice';
+import { API_BASE_URL } from '../config';
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'http://localhost:8000/api/v1',
+  baseUrl: API_BASE_URL,
+  credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.accessToken;
     if (token) {
@@ -18,7 +20,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   
   if (result.error && result.error.status === 401) {
     // Try to get a new token
-    const refreshResult = await baseQuery('/auth/refresh', api, extraOptions);
+    const refreshResult = await baseQuery({ url: '/auth/refresh', method: 'POST' }, api, extraOptions);
     
     if (refreshResult.data) {
       // @ts-ignore

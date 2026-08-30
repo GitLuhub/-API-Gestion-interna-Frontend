@@ -1,15 +1,24 @@
 import { apiSlice } from '../../store/apiSlice';
+import { RolePublic, RoleCreate, RoleUpdate } from '../../types/role';
+import { StandardResponse } from '../../types/api';
 
 export const rolesApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getRoles: builder.query({
-      query: () => '/roles/',
-      providesTags: (result = []) => [
-        'Role',
-        ...result.map(({ id }: { id: string }) => ({ type: 'Role' as const, id })),
-      ],
+    getRoles: builder.query<StandardResponse<RolePublic[]>, { skip?: number; limit?: number } | void>({
+      query: (args) => {
+        const skip = args?.skip ?? 0;
+        const limit = args?.limit ?? 100;
+        return `/roles/?skip=${skip}&limit=${limit}`;
+      },
+      providesTags: (result) => 
+        result?.data 
+          ? [
+              'Role',
+              ...result.data.map(({ id }) => ({ type: 'Role' as const, id })),
+            ]
+          : ['Role'],
     }),
-    createRole: builder.mutation({
+    createRole: builder.mutation<StandardResponse<RolePublic>, RoleCreate>({
       query: (role) => ({
         url: '/roles/',
         method: 'POST',
@@ -17,7 +26,22 @@ export const rolesApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Role'],
     }),
-    assignRole: builder.mutation({
+    updateRole: builder.mutation<StandardResponse<RolePublic>, { id: string } & RoleUpdate>({
+      query: ({ id, ...patch }) => ({
+        url: `/roles/${id}`,
+        method: 'PUT',
+        body: patch,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Role', id }],
+    }),
+    deleteRole: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/roles/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'Role', id }],
+    }),
+    assignRole: builder.mutation<{ detail: string }, { roleId: string; userId: string }>({
       query: ({ roleId, userId }) => ({
         url: `/roles/${roleId}/assign/${userId}`,
         method: 'POST',
@@ -25,10 +49,8 @@ export const rolesApi = apiSlice.injectEndpoints({
       invalidatesTags: (result, error, { userId }) => [
         { type: 'User', id: userId }
       ],
-      // Since assign/revoke role doesn't return the full updated user object, we just invalidate the specific user or all users to trigger a refetch.
-      // Wait, we can optionally optimistically update the User cache if we know the role object, but invalidation is safer for nested objects.
     }),
-    revokeRole: builder.mutation({
+    revokeRole: builder.mutation<{ detail: string }, { roleId: string; userId: string }>({
       query: ({ roleId, userId }) => ({
         url: `/roles/${roleId}/revoke/${userId}`,
         method: 'DELETE',
@@ -43,6 +65,8 @@ export const rolesApi = apiSlice.injectEndpoints({
 export const {
   useGetRolesQuery,
   useCreateRoleMutation,
+  useUpdateRoleMutation,
+  useDeleteRoleMutation,
   useAssignRoleMutation,
   useRevokeRoleMutation,
 } = rolesApi;
